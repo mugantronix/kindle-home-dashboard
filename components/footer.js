@@ -1,0 +1,104 @@
+import { getBatteryIcon } from "../utils/battery-icon.js";
+
+export class FooterComponent {
+
+    constructor() {
+
+        this.element = document.createElement("div");
+        this.element.className = "footer";
+
+        this.batteryStatusElement = document.createElement("span");
+        this.batteryStatusElement.className = "footer-battery-status hidden";
+
+        this.batteryIcon = document.createElement("img");
+        this.batteryIcon.className = "footer-battery-icon";
+
+        this.batteryGroup = document.createElement("div");
+        this.batteryGroup.className = "footer-battery-group";
+
+        this.batteryGroup.append(
+            this.batteryStatusElement,
+            this.batteryIcon
+        );
+
+        this.dateTimeElement = document.createElement("div");
+        this.dateTimeElement.className = "footer-datetime";
+
+        this.dateElement = document.createElement("span");
+        this.dateElement.className = "footer-date";
+
+        this.timeElement = document.createElement("span");
+        this.timeElement.className = "footer-time";
+
+        this.dateTimeElement.append(
+            this.dateElement,
+            this.timeElement
+        );
+
+        this.element.append(
+            this.batteryGroup,
+            this.dateTimeElement
+        );
+
+        this.update();
+
+    }
+
+    render() {
+
+        return this.element;
+
+    }
+
+    update(battery = {}) {
+
+        this.batteryIcon.src =
+            getBatteryIcon(
+                battery.level,
+                battery.charging
+            );
+
+        const level = Number(battery.level);
+
+        if (battery.charging) {
+
+            this.batteryStatusElement.classList.remove("hidden");
+
+            this.batteryStatusElement.textContent =
+                Number.isFinite(level) && level >= 100
+                    ? "Batteria Carica"
+                    : Number.isFinite(level)
+                        ? `${Math.round(level)}%`
+                        : "";
+
+        } else {
+
+            this.batteryStatusElement.classList.add("hidden");
+            this.batteryStatusElement.textContent = "";
+
+        }
+
+        const now = new Date();
+
+        this.dateElement.textContent =
+            now.toLocaleDateString(
+                "it-IT",
+                {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric"
+                }
+            );
+
+        this.timeElement.textContent =
+            now.toLocaleTimeString(
+                "it-IT",
+                {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }
+            );
+
+    }
+
+}
