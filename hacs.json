@@ -1,6 +1,5 @@
 {
     "name": "Kindle Home Dashboard",
     "render_readme": true,
-    "filename": "kindle-home-dashboard.js",
-    "content_in_root": true
+    "filename": "kindle-home-dashboard.js"
 }
