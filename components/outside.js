@@ -1,7 +1,7 @@
 import { getWeatherIcon, getWeatherLabel } from "../utils/weather-icons.js";
+import { assetUrl } from "../utils/paths.js";
 
-const ICON_BASE =
-    "/local/kindle-home-dashboard/assets/icons/";
+const ICON_BASE = assetUrl("assets/icons/");
 
 export class OutsideComponent {
 

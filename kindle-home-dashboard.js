@@ -5,6 +5,7 @@ import { RoomsComponent } from "./components/rooms.js";
 import { FooterComponent } from "./components/footer.js";
 
 import { getDashboardData } from "./adapters/home-assistant/adapter.js";
+import { assetUrl } from "./utils/paths.js";
 
 class KindleHomeDashboard extends HTMLElement {
 
@@ -84,7 +85,7 @@ class KindleHomeDashboard extends HTMLElement {
         this.shadowRoot.innerHTML = `
             <link
                 rel="stylesheet"
-                href="/local/kindle-home-dashboard/theme.css"
+                href="${assetUrl("theme.css")}"
             >
 
             <div class="dashboard"></div>

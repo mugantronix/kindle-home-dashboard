@@ -1,3 +1,5 @@
+import { assetUrl } from "../utils/paths.js";
+
 const HOURS = 24;
 const Y_AXIS_MAX_MM = 4;
 const Y_AXIS_STEP = 1;
@@ -121,7 +123,7 @@ export class RainGraphComponent {
 
         this.sideIcon = document.createElement("img");
         this.sideIcon.className = "rain-graph-side-icon";
-        this.sideIcon.src = "/local/kindle-home-dashboard/assets/icons/rain.svg";
+        this.sideIcon.src = assetUrl("assets/icons/rain.svg");
 
         this.sideLabel = document.createElement("div");
         this.sideLabel.className = "rain-graph-side-label";

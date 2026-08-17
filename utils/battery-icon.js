@@ -1,5 +1,6 @@
-const BASE =
-    "/local/kindle-home-dashboard/assets/icons/";
+import { assetUrl } from "./paths.js";
+
+const BASE = assetUrl("assets/icons/");
 
 export function getBatteryIcon(level, charging) {
 
