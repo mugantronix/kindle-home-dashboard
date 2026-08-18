@@ -117,7 +117,19 @@ async function fetchForecast(hass, entityId, type) {
 
     });
 
-    return result?.response?.[entityId]?.forecast ?? [];
+    console.log(
+        `kindle-home-dashboard: raw ${type} forecast response`,
+        result
+    );
+
+    const forecast =
+        result?.response?.[entityId]?.forecast ?? [];
+
+    console.log(
+        `kindle-home-dashboard: parsed ${forecast.length} ${type} forecast entries`
+    );
+
+    return forecast;
 
 }
 

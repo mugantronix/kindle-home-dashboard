@@ -111,10 +111,17 @@ class KindleHomeDashboard extends HTMLElement {
 
         this._fetchingForecasts = true;
 
+        console.log("kindle-home-dashboard: fetching forecasts…");
+
         try {
 
             this._forecasts = await fetchForecasts(hass);
             this._forecastsFetchedAt = Date.now();
+
+            console.log(
+                "kindle-home-dashboard: forecasts updated",
+                this._forecasts
+            );
 
             this._updateComponents(this._hass);
 
