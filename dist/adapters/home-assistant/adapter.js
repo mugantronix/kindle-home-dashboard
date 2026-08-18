@@ -1,4 +1,5 @@
 import { ENTITIES } from "./config.js";
+import { getConditionIcon, getConditionLabel } from "../../utils/weather-conditions.js";
 
 /**
  * Dashboard View Model
@@ -7,6 +8,7 @@ import { ENTITIES } from "./config.js";
  *   outside: {
  *     temperature: Number,
  *     icon: String,
+ *     conditionLabel: String,
  *     todayHigh: Number,
  *     todayLow: Number,
  *     humidity: Number,
@@ -48,21 +50,27 @@ import { ENTITIES } from "./config.js";
  * }
  */
 
-export function getDashboardData(hass) {
+const FORECAST_DAY_COUNT = 5;
+const RAIN_HOUR_COUNT = 24;
+
+export function getDashboardData(hass, forecasts = {}) {
+
+    const daily = forecasts.daily ?? [];
+    const hourly = forecasts.hourly ?? [];
 
     return {
 
         outside:
-            buildOutsideData(hass),
+            buildOutsideData(hass, daily),
 
         rooms:
             buildRoomsData(hass),
 
         forecast:
-            buildForecastData(hass),
+            buildForecastData(daily),
 
         rainGraph:
-            buildRainGraphData(hass),
+            buildRainGraphData(hourly),
 
         battery:
             buildBatteryData(hass)
@@ -71,7 +79,49 @@ export function getDashboardData(hass) {
 
 }
 
-function buildOutsideData(hass) {
+/**
+ * Fetches daily + hourly forecasts for the outside weather entity
+ * via the weather.get_forecasts action. This is a real network/WS
+ * round-trip (forecasts are no longer part of the entity's state
+ * as of Home Assistant 2024.4), so callers should throttle how
+ * often this runs rather than calling it on every hass update.
+ */
+export async function fetchForecasts(hass) {
+
+    const entityId = ENTITIES.outside.weather;
+
+    const [daily, hourly] = await Promise.all([
+
+        fetchForecast(hass, entityId, "daily"),
+        fetchForecast(hass, entityId, "hourly")
+
+    ]);
+
+    return { daily, hourly };
+
+}
+
+async function fetchForecast(hass, entityId, type) {
+
+    const result = await hass.callWS({
+
+        type: "call_service",
+        domain: "weather",
+        service: "get_forecasts",
+
+        service_data: { type },
+
+        target: { entity_id: entityId },
+
+        return_response: true
+
+    });
+
+    return result?.response?.[entityId]?.forecast ?? [];
+
+}
+
+function buildOutsideData(hass, daily) {
 
     const weather =
         getEntity(hass, ENTITIES.outside.weather);
@@ -82,6 +132,12 @@ function buildOutsideData(hass) {
     const windBearing =
         toNumber(weather?.attributes.wind_bearing);
 
+    const condition =
+        weather?.state ?? null;
+
+    const today =
+        findEntryForDayOffset(daily, 0);
+
     return {
 
         temperature:
@@ -91,22 +147,16 @@ function buildOutsideData(hass) {
             ),
 
         icon:
-            getStateValue(
-                hass,
-                ENTITIES.outside.icon
-            ) ?? "",
+            getConditionIcon(condition, isDaytime()),
+
+        conditionLabel:
+            getConditionLabel(condition),
 
         todayHigh:
-            getNumericState(
-                hass,
-                `${ENTITIES.outside.todayBase}high`
-            ),
+            toNumber(today?.temperature),
 
         todayLow:
-            getNumericState(
-                hass,
-                `${ENTITIES.outside.todayBase}low`
-            ),
+            toNumber(today?.templow),
 
         humidity:
             toNumber(weather?.attributes.humidity),
@@ -178,41 +228,31 @@ function buildRoomData(hass, room) {
 
 }
 
-function buildForecastData(hass) {
+function buildForecastData(daily) {
 
     const result = [];
 
     for (
-        let day = 1;
-        day <= ENTITIES.forecast.days;
-        day++
+        let offset = 1;
+        offset <= FORECAST_DAY_COUNT;
+        offset++
     ) {
 
-        const base =
-            ENTITIES.forecast.base.replace(
-                "{day}",
-                day
-            );
+        const entry =
+            findEntryForDayOffset(daily, offset);
 
         result.push({
 
             icon:
-                getStateValue(
-                    hass,
-                    `${base}icon`
-                ) ?? "",
+                entry
+                    ? getConditionIcon(entry.condition, true)
+                    : null,
 
             high:
-                getNumericState(
-                    hass,
-                    `${base}high`
-                ),
+                toNumber(entry?.temperature),
 
             low:
-                getNumericState(
-                    hass,
-                    `${base}low`
-                )
+                toNumber(entry?.templow)
 
         });
 
@@ -222,41 +262,32 @@ function buildForecastData(hass) {
 
 }
 
-function buildRainGraphData(hass) {
+function buildRainGraphData(hourly) {
 
     const hours = [];
 
     let total = 0;
 
-    const currentHour =
-        new Date().getHours();
-
     for (
-        let offset = 0;
-        offset < ENTITIES.rain.hours;
-        offset++
+        let i = 0;
+        i < RAIN_HOUR_COUNT;
+        i++
     ) {
 
-        const entityId =
-            ENTITIES.rain.base.replace(
-                "{hour}",
-                String(offset + 1).padStart(2, "0")
-            );
+        const entry = hourly[i];
 
         const accumulation =
-            getNumericState(
-                hass,
-                entityId
-            ) ?? 0;
+            toNumber(entry?.precipitation) ?? 0;
 
         total += accumulation;
 
         hours.push({
 
             hour:
-                String(
-                    (currentHour + offset + 1) % 24
-                ).padStart(2, "0"),
+                entry
+                    ? String(new Date(entry.datetime).getHours())
+                        .padStart(2, "0")
+                    : "--",
 
             accumulation
 
@@ -291,6 +322,54 @@ function buildBatteryData(hass) {
             ) === "on"
 
     };
+
+}
+
+//
+// Forecast matching helpers
+//
+
+// Finds the daily-forecast entry `offset` calendar days from today
+// (offset 0 = today, 1 = tomorrow, ...), matched by local calendar
+// date rather than a raw array index — forecast APIs don't always
+// start their array exactly at "today", so this is more robust
+// than assuming a fixed index.
+function findEntryForDayOffset(daily, offset) {
+
+    const today = new Date();
+
+    return daily.find(entry => {
+
+        const entryDate = new Date(entry.datetime);
+
+        return daysBetween(today, entryDate) === offset;
+
+    });
+
+}
+
+function daysBetween(a, b) {
+
+    const startOfA =
+        new Date(a.getFullYear(), a.getMonth(), a.getDate());
+
+    const startOfB =
+        new Date(b.getFullYear(), b.getMonth(), b.getDate());
+
+    return Math.round(
+        (startOfB - startOfA) / 86400000
+    );
+
+}
+
+// Simple local-time heuristic, used only to pick between the day
+// and night icon for conditions that don't already encode it
+// (currently just "partlycloudy").
+function isDaytime() {
+
+    const hour = new Date().getHours();
+
+    return hour >= 7 && hour < 20;
 
 }
 
@@ -330,24 +409,12 @@ function formatWind(speed, bearing) {
 // Home Assistant helpers
 //
 
-function getState(
-    hass,
-    entityId
-) {
-
-    return hass.states[entityId];
-
-}
-
 function getStateValue(
     hass,
     entityId
 ) {
 
-    return getState(
-        hass,
-        entityId
-    )?.state;
+    return hass.states[entityId]?.state;
 
 }
 

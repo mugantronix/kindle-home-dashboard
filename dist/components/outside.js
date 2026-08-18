@@ -1,4 +1,3 @@
-import { getWeatherIcon, getWeatherLabel } from "../utils/weather-icons.js";
 import { assetUrl } from "../utils/paths.js";
 
 const ICON_BASE = assetUrl("assets/icons/");
@@ -118,11 +117,10 @@ export class OutsideComponent {
 
         if (data.icon != null) {
 
-            this.iconElement.src =
-                getWeatherIcon(data.icon);
+            this.iconElement.src = data.icon;
 
             this.titleElement.textContent =
-                getWeatherLabel(data.icon);
+                data.conditionLabel ?? "--";
 
         }
 

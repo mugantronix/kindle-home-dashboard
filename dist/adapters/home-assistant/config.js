@@ -3,11 +3,6 @@ export const ENTITIES = {
     outside: {
 
         temperature: "sensor.open_space_a_c_open_space_outside_temperature",
-        icon: "sensor.kindle_weather_forecast_icon",
-
-        // Today's high/low reuse the same forecast sensor family as
-        // the 5-day forecast, at index 0 (today).
-        todayBase: "sensor.kindle_weather_forecast_day0_",
 
         weather: "weather.pirateweather"
 
@@ -31,24 +26,6 @@ export const ENTITIES = {
         }
 
     ],
-
-    forecast: {
-
-        days: 5,
-
-        base:
-            "sensor.kindle_weather_forecast_day{day}_"
-
-    },
-
-    rain: {
-
-        hours: 24,
-
-        base:
-            "sensor.kindle_weather_rain_hour{hour}"
-
-    },
 
     battery: {
 

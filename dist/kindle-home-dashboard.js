@@ -4,8 +4,13 @@ import { RainGraphComponent } from "./components/rain-graph.js";
 import { RoomsComponent } from "./components/rooms.js";
 import { FooterComponent } from "./components/footer.js";
 
-import { getDashboardData } from "./adapters/home-assistant/adapter.js";
+import { getDashboardData, fetchForecasts } from "./adapters/home-assistant/adapter.js";
 import { assetUrl } from "./utils/paths.js";
+
+// PirateWeather itself only refreshes every 900s server-side, so
+// there's no point re-fetching forecasts (a real WS round-trip)
+// more often than that.
+const FORECAST_REFRESH_MS = 15 * 60 * 1000;
 
 class KindleHomeDashboard extends HTMLElement {
 
@@ -23,6 +28,10 @@ class KindleHomeDashboard extends HTMLElement {
         this.forecast = null;
         this.rainGraph = null;
         this.footer = null;
+
+        this._forecasts = { daily: [], hourly: [] };
+        this._forecastsFetchedAt = 0;
+        this._fetchingForecasts = false;
 
     }
 
@@ -56,7 +65,16 @@ class KindleHomeDashboard extends HTMLElement {
             return;
         }
 
-        const dashboardData = getDashboardData(hass);
+        this._updateComponents(hass);
+
+        this._maybeRefreshForecasts(hass);
+
+    }
+
+    _updateComponents(hass) {
+
+        const dashboardData =
+            getDashboardData(hass, this._forecasts);
 
         this.outside.update(
             dashboardData.outside
@@ -77,6 +95,45 @@ class KindleHomeDashboard extends HTMLElement {
         this.footer.update(
             dashboardData.battery
         );
+
+    }
+
+    async _maybeRefreshForecasts(hass) {
+
+        const now = Date.now();
+
+        const isStale =
+            now - this._forecastsFetchedAt > FORECAST_REFRESH_MS;
+
+        if (this._fetchingForecasts || !isStale) {
+            return;
+        }
+
+        this._fetchingForecasts = true;
+
+        try {
+
+            this._forecasts = await fetchForecasts(hass);
+            this._forecastsFetchedAt = Date.now();
+
+            this._updateComponents(this._hass);
+
+        } catch (error) {
+
+            // Fail soft: keep showing whatever forecast data we
+            // already had (possibly none, on first load) rather
+            // than breaking the whole dashboard over a weather
+            // API hiccup.
+            console.warn(
+                "kindle-home-dashboard: forecast fetch failed",
+                error
+            );
+
+        } finally {
+
+            this._fetchingForecasts = false;
+
+        }
 
     }
 

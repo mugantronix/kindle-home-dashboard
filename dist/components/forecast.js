@@ -1,4 +1,4 @@
-import { getWeatherIcon } from "../utils/weather-icons.js";
+import { assetUrl } from "../utils/paths.js";
 
 const FORECAST_DAY_COUNT = 5;
 
@@ -87,7 +87,7 @@ export class ForecastComponent {
                 this.getDateLabel(date);
 
             elements.iconElement.src =
-                getWeatherIcon(forecast.icon);
+                forecast.icon ?? assetUrl("assets/icons/cloudy.svg");
 
             const high =
                 Number(forecast.high);
