@@ -15,21 +15,19 @@ If any of that isn't in place yet, get it working with a stock dashboard first �
 
 ### Required entities
 
-This card does **not** discover or create entities — every entity ID is hardcoded in `dist/adapters/home-assistant/config.js` and must be adapted to your own Home Assistant instance before use. None of the weather/rain sensors below are built into Home Assistant; they're custom template sensors this project expects you to already have (or build yourself) matching the shape described here.
+This card does **not** discover or create entities — every entity ID is hardcoded in `dist/adapters/home-assistant/config.js` and must be adapted to your own Home Assistant instance before use.
 
 | Config key | Type | Purpose |
 |---|---|---|
 | `outside.temperature` | sensor | Outdoor temperature (numeric state) |
-| `outside.icon` | sensor | Current condition icon, PirateWeather-style string (`clear-day`, `clear-night`, `cloudy`, `partly-cloudy-day`, `partly-cloudy-night`, `rain`, `snow`, `sleet`, `hail`, `fog`, `wind`, `thunderstorm`) |
-| `outside.todayBase` + `high`/`low` | sensor pair | Today's forecast max/min (e.g. `sensor.xxx_day0_high`, `sensor.xxx_day0_low`) |
-| `outside.weather` | `weather.*` entity | Standard HA weather entity; reads `humidity`, `pressure`, `wind_speed`, `wind_bearing` attributes |
+| `outside.weather` | `weather.*` entity | Must support both `daily` and `hourly` forecasts (checked via `weather.get_forecasts`). Also reads `humidity`, `pressure`, `wind_speed`, `wind_bearing` attributes from its current state |
 | `rooms[].climate` | `climate.*` entity | One per room card (3 by default). Reads `current_temperature`, `temperature`, `fan_mode`, `fan_modes` attributes — any standard HA climate entity works |
-| `forecast.base` + `{day}` | sensor family | 5 days of `icon`/`high`/`low` sensors, e.g. `sensor.xxx_day1_icon` … `sensor.xxx_day5_low` |
-| `rain.base` + `{hour}` | sensor family | 24 hourly rain-accumulation sensors, e.g. `sensor.xxx_hour01` … `sensor.xxx_hour24` |
 | `battery.level` | `input_number` | Kindle battery percentage (0-100). Something on your side needs to push this value — Lovelace Kindle Screensaver doesn't report it natively |
 | `battery.charging` | `input_boolean` | Whether the Kindle is currently charging |
 
-The three room cards, and the 5-day/24-hour ranges, are hardcoded counts in the current version — not configurable without editing the source.
+The 5-day forecast and 24h rain chart are built directly from `outside.weather`'s forecasts (`weather.get_forecasts`, called every ~15 minutes and cached — this entity's own upstream refresh interval, so there's no point polling more often). No separate per-day or per-hour sensors are needed for this.
+
+The three room cards are a hardcoded count in the current version — not configurable without editing the source.
 
 ## Installation (HACS)
 
