@@ -1,4 +1,3 @@
-import { ENTITIES } from "./config.js";
 import { getConditionIcon, getConditionLabel } from "../../utils/weather-conditions.js";
 
 /**
@@ -46,25 +45,34 @@ import { getConditionIcon, getConditionLabel } from "../../utils/weather-conditi
  *   battery: {
  *     level: Number,
  *     charging: Boolean
- *   }
+ *   } | null
+ * }
+ *
+ * `config` is the card's own YAML config (see setConfig in
+ * kindle-home-dashboard.js for the expected/validated shape):
+ *
+ * {
+ *   outside: { temperature: "sensor...", weather: "weather..." },
+ *   rooms: [ { name: "...", climate: "climate..." }, ... ],
+ *   battery: { level: "input_number...", charging: "input_boolean..." } | undefined
  * }
  */
 
 const FORECAST_DAY_COUNT = 5;
 const RAIN_HOUR_COUNT = 24;
 
-export function getDashboardData(hass, forecasts = {}) {
+export function getDashboardData(hass, forecasts, config) {
 
-    const daily = forecasts.daily ?? [];
-    const hourly = forecasts.hourly ?? [];
+    const daily = forecasts?.daily ?? [];
+    const hourly = forecasts?.hourly ?? [];
 
     return {
 
         outside:
-            buildOutsideData(hass, daily),
+            buildOutsideData(hass, daily, config),
 
         rooms:
-            buildRoomsData(hass),
+            buildRoomsData(hass, config),
 
         forecast:
             buildForecastData(daily),
@@ -73,7 +81,7 @@ export function getDashboardData(hass, forecasts = {}) {
             buildRainGraphData(hourly),
 
         battery:
-            buildBatteryData(hass)
+            buildBatteryData(hass, config)
 
     };
 
@@ -86,9 +94,9 @@ export function getDashboardData(hass, forecasts = {}) {
  * as of Home Assistant 2024.4), so callers should throttle how
  * often this runs rather than calling it on every hass update.
  */
-export async function fetchForecasts(hass) {
+export async function fetchForecasts(hass, config) {
 
-    const entityId = ENTITIES.outside.weather;
+    const entityId = config.outside.weather;
 
     const [daily, hourly] = await Promise.all([
 
@@ -117,26 +125,14 @@ async function fetchForecast(hass, entityId, type) {
 
     });
 
-    console.log(
-        `kindle-home-dashboard: raw ${type} forecast response`,
-        result
-    );
-
-    const forecast =
-        result?.response?.[entityId]?.forecast ?? [];
-
-    console.log(
-        `kindle-home-dashboard: parsed ${forecast.length} ${type} forecast entries`
-    );
-
-    return forecast;
+    return result?.response?.[entityId]?.forecast ?? [];
 
 }
 
-function buildOutsideData(hass, daily) {
+function buildOutsideData(hass, daily, config) {
 
     const weather =
-        getEntity(hass, ENTITIES.outside.weather);
+        getEntity(hass, config.outside.weather);
 
     const windSpeed =
         toNumber(weather?.attributes.wind_speed);
@@ -155,7 +151,7 @@ function buildOutsideData(hass, daily) {
         temperature:
             getNumericState(
                 hass,
-                ENTITIES.outside.temperature
+                config.outside.temperature
             ),
 
         icon:
@@ -190,9 +186,9 @@ function buildOutsideData(hass, daily) {
 
 }
 
-function buildRoomsData(hass) {
+function buildRoomsData(hass, config) {
 
-    return ENTITIES.rooms.map(room =>
+    return config.rooms.map(room =>
 
         buildRoomData(hass, room)
 
@@ -317,20 +313,26 @@ function buildRainGraphData(hourly) {
 
 }
 
-function buildBatteryData(hass) {
+function buildBatteryData(hass, config) {
+
+    if (!config.battery) {
+
+        return null;
+
+    }
 
     return {
 
         level:
             getNumericState(
                 hass,
-                ENTITIES.battery.level
+                config.battery.level
             ),
 
         charging:
             getStateValue(
                 hass,
-                ENTITIES.battery.charging
+                config.battery.charging
             ) === "on"
 
     };

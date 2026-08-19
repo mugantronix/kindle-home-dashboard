@@ -3,14 +3,12 @@ import { getFanLevel, FAN_BAR_COUNT } from "../utils/fan-level.js";
 
 export class RoomsComponent {
 
-    constructor() {
+    constructor(roomCount = 3) {
 
         this.element = document.createElement("div");
         this.element.className = "rooms";
 
         this.roomElements = [];
-
-        const roomCount = 3;
 
         for (let i = 0; i < roomCount; i++) {
 

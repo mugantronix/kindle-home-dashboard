@@ -37,6 +37,53 @@ class KindleHomeDashboard extends HTMLElement {
 
     setConfig(config) {
 
+        if (!config || !Array.isArray(config.rooms) || config.rooms.length === 0) {
+
+            throw new Error(
+                "kindle-home-dashboard: 'rooms' is required in the card config (a list of at least one { name, climate })."
+            );
+
+        }
+
+        for (const room of config.rooms) {
+
+            if (!room.name || !room.climate) {
+
+                throw new Error(
+                    "kindle-home-dashboard: every entry in 'rooms' needs both 'name' and 'climate'."
+                );
+
+            }
+
+        }
+
+        if (!config.outside?.weather) {
+
+            throw new Error(
+                "kindle-home-dashboard: 'outside.weather' is required in the card config (a weather.* entity)."
+            );
+
+        }
+
+        if (!config.outside?.temperature) {
+
+            throw new Error(
+                "kindle-home-dashboard: 'outside.temperature' is required in the card config."
+            );
+
+        }
+
+        if (
+            config.battery &&
+            (!config.battery.level || !config.battery.charging)
+        ) {
+
+            throw new Error(
+                "kindle-home-dashboard: 'battery', if present, needs both 'level' and 'charging'. Omit 'battery' entirely to hide it."
+            );
+
+        }
+
         this._config = config;
 
     }
@@ -45,7 +92,7 @@ class KindleHomeDashboard extends HTMLElement {
 
         this.outside = new OutsideComponent();
 
-        this.rooms = new RoomsComponent();
+        this.rooms = new RoomsComponent(this._config.rooms.length);
 
         this.forecast = new ForecastComponent();
 
@@ -74,7 +121,7 @@ class KindleHomeDashboard extends HTMLElement {
     _updateComponents(hass) {
 
         const dashboardData =
-            getDashboardData(hass, this._forecasts);
+            getDashboardData(hass, this._forecasts, this._config);
 
         this.outside.update(
             dashboardData.outside
@@ -111,17 +158,10 @@ class KindleHomeDashboard extends HTMLElement {
 
         this._fetchingForecasts = true;
 
-        console.log("kindle-home-dashboard: fetching forecasts…");
-
         try {
 
-            this._forecasts = await fetchForecasts(hass);
+            this._forecasts = await fetchForecasts(hass, this._config);
             this._forecastsFetchedAt = Date.now();
-
-            console.log(
-                "kindle-home-dashboard: forecasts updated",
-                this._forecasts
-            );
 
             this._updateComponents(this._hass);
 

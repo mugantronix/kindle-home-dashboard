@@ -2,7 +2,7 @@
 
 A monochrome, high-contrast Lovelace dashboard built for e-ink displays. Designed to be captured by [Lovelace Kindle Screensaver](https://github.com/joelspurr/lovelace_kindle_screensaver) and pushed to a jailbroken Kindle running OnlineScreensaver, but the card itself works on any Lovelace view.
 
-Shows: outdoor conditions (temperature, min/max, wind, humidity, pressure), three AC/climate rooms, a 5-day forecast, a 24h rain chart, and a footer with Kindle battery status and the current date/time.
+Shows: outdoor conditions (temperature, min/max, wind, humidity, pressure), a configurable set of AC/climate rooms, a 5-day forecast, a 24h rain chart, and a footer with Kindle battery status and the current date/time.
 
 ## Requirements
 
@@ -13,21 +13,37 @@ This README assumes the Kindle-side setup is already done and working:
 
 If any of that isn't in place yet, get it working with a stock dashboard first — this card assumes the capture pipeline is already reliable.
 
-### Required entities
+### Configuration
 
-This card does **not** discover or create entities — every entity ID is hardcoded in `dist/adapters/home-assistant/config.js` and must be adapted to your own Home Assistant instance before use.
+Unlike earlier versions of this project, entity IDs are **not** hardcoded — they live entirely in the card's own YAML config, so installing via HACS and configuring it are two separate, non-conflicting steps.
 
-| Config key | Type | Purpose |
+```yaml
+type: custom:kindle-home-dashboard
+outside:
+  temperature: sensor.your_outdoor_temperature   # required
+  weather: weather.your_weather_entity           # required — see note below
+rooms:                                           # required, at least one
+  - name: Open Space
+    climate: climate.open_space
+  - name: Bedroom
+    climate: climate.bedroom
+  - name: Studio
+    climate: climate.studio
+battery:                                         # optional — omit to hide it entirely
+  level: input_number.kindle_battery_level
+  charging: input_boolean.kindle_battery_charging
+```
+
+| Key | Required | Notes |
 |---|---|---|
-| `outside.temperature` | sensor | Outdoor temperature (numeric state) |
-| `outside.weather` | `weather.*` entity | Must support both `daily` and `hourly` forecasts (checked via `weather.get_forecasts`). Also reads `humidity`, `pressure`, `wind_speed`, `wind_bearing` attributes from its current state |
-| `rooms[].climate` | `climate.*` entity | One per room card (3 by default). Reads `current_temperature`, `temperature`, `fan_mode`, `fan_modes` attributes — any standard HA climate entity works |
-| `battery.level` | `input_number` | Kindle battery percentage (0-100). Something on your side needs to push this value — Lovelace Kindle Screensaver doesn't report it natively |
-| `battery.charging` | `input_boolean` | Whether the Kindle is currently charging |
+| `outside.temperature` | yes | Any sensor with a numeric state |
+| `outside.weather` | yes | Must be a `weather.*` entity supporting both `daily` and `hourly` forecasts (checked via the `weather.get_forecasts` action). Its current-state attributes (`humidity`, `pressure`, `wind_speed`, `wind_bearing`) are also read directly |
+| `rooms` | yes | One card per entry. Each `climate` needs `current_temperature`, `temperature`, `fan_mode`, `fan_modes` attributes — any standard HA climate entity works. The layout is visually tuned for 3 rooms (equal-width columns); other counts will render but may look uneven |
+| `battery` | no | Omit this whole block to hide the battery indicator. `level` is an `input_number` (0-100) and `charging` an `input_boolean` — something on your side needs to keep these updated, Lovelace Kindle Screensaver doesn't report Kindle battery status natively |
 
-The 5-day forecast and 24h rain chart are built directly from `outside.weather`'s forecasts (`weather.get_forecasts`, called every ~15 minutes and cached — this entity's own upstream refresh interval, so there's no point polling more often). No separate per-day or per-hour sensors are needed for this.
+The 5-day forecast and 24h rain chart come from `outside.weather`'s forecasts (`weather.get_forecasts`, fetched every ~15 minutes and cached — matching typical weather-integration refresh intervals, so there's no point polling more often). No separate per-day or per-hour sensors are needed.
 
-The three room cards are a hardcoded count in the current version — not configurable without editing the source.
+If the config is invalid (missing a required field), the card shows a standard Lovelace "Configuration error" with a message telling you which key is missing — check that before assuming something's broken.
 
 ## Installation (HACS)
 
@@ -35,13 +51,7 @@ The three room cards are a hardcoded count in the current version — not config
 2. Add this repository's URL, category **Lovelace**
 3. Find "Kindle Home Dashboard" in HACS and install it
 4. HACS registers the Lovelace resource automatically — no manual resource entry needed
-
-### ⚠️ A note on customization
-
-Since entity IDs live in `dist/adapters/home-assistant/config.js` rather than the card's YAML config, editing that file directly works, but **HACS will overwrite your edits on the next update**. Until this project supports YAML-based configuration (not yet implemented), your options are:
-
-- Fork the repository and point HACS at your fork instead, or
-- Re-apply your `config.js` edits after every update (check the diff HACS shows you before updating)
+5. Add the card to a view with the config above (see next section)
 
 ## Setting up the dashboard view
 
@@ -55,6 +65,19 @@ path: kindle
 panel: true
 cards:
   - type: custom:kindle-home-dashboard
+    outside:
+      temperature: sensor.your_outdoor_temperature
+      weather: weather.your_weather_entity
+    rooms:
+      - name: Open Space
+        climate: climate.open_space
+      - name: Bedroom
+        climate: climate.bedroom
+      - name: Studio
+        climate: climate.studio
+    battery:
+      level: input_number.kindle_battery_level
+      charging: input_boolean.kindle_battery_charging
 ```
 
 `panel: true` is important — it makes the card fill the whole view edge-to-edge, matching the fixed 600×800 canvas the card renders internally.

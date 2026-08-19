@@ -50,31 +50,41 @@ export class FooterComponent {
 
     }
 
-    update(battery = {}) {
+    update(battery) {
 
-        this.batteryIcon.src =
-            getBatteryIcon(
-                battery.level,
-                battery.charging
-            );
+        if (!battery) {
 
-        const level = Number(battery.level);
-
-        if (battery.charging) {
-
-            this.batteryStatusElement.classList.remove("hidden");
-
-            this.batteryStatusElement.textContent =
-                Number.isFinite(level) && level >= 100
-                    ? "Batteria Carica"
-                    : Number.isFinite(level)
-                        ? `${Math.round(level)}%`
-                        : "";
+            this.batteryGroup.classList.add("hidden");
 
         } else {
 
-            this.batteryStatusElement.classList.add("hidden");
-            this.batteryStatusElement.textContent = "";
+            this.batteryGroup.classList.remove("hidden");
+
+            this.batteryIcon.src =
+                getBatteryIcon(
+                    battery.level,
+                    battery.charging
+                );
+
+            const level = Number(battery.level);
+
+            if (battery.charging) {
+
+                this.batteryStatusElement.classList.remove("hidden");
+
+                this.batteryStatusElement.textContent =
+                    Number.isFinite(level) && level >= 100
+                        ? "Batteria Carica"
+                        : Number.isFinite(level)
+                            ? `${Math.round(level)}%`
+                            : "";
+
+            } else {
+
+                this.batteryStatusElement.classList.add("hidden");
+                this.batteryStatusElement.textContent = "";
+
+            }
 
         }
 
