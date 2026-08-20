@@ -27,6 +27,7 @@ rooms:                                           # required, at least one
     climate: climate.open_space
   - name: Bedroom
     climate: climate.bedroom
+    temperature: sensor.bedroom_dedicated_temperature   # optional — overrides the climate's own current_temperature
   - name: Studio
     climate: climate.studio
 battery:                                         # optional — omit to hide it entirely
@@ -38,7 +39,7 @@ battery:                                         # optional — omit to hide it 
 |---|---|---|
 | `outside.temperature` | yes | Any sensor with a numeric state |
 | `outside.weather` | yes | Must be a `weather.*` entity supporting both `daily` and `hourly` forecasts (checked via the `weather.get_forecasts` action). Its current-state attributes (`humidity`, `pressure`, `wind_speed`, `wind_bearing`) are also read directly |
-| `rooms` | yes | One card per entry. Each `climate` needs `current_temperature`, `temperature`, `fan_mode`, `fan_modes` attributes — any standard HA climate entity works. The layout is visually tuned for 3 rooms (equal-width columns); other counts will render but may look uneven |
+| `rooms` | yes | One card per entry. Each `climate` needs `current_temperature`, `temperature`, `fan_mode`, `fan_modes` attributes — any standard HA climate entity works. Optionally, add a `temperature` sensor per room (a separate entity ID, e.g. a dedicated room sensor) to override the climate's own `current_temperature` — useful if you'd rather trust a standalone sensor than the AC unit's reading. The layout is visually tuned for 3 rooms (equal-width columns); other counts will render but may look uneven |
 | `battery` | no | Omit this whole block to hide the battery indicator. `level` is an `input_number` (0-100) and `charging` an `input_boolean` — something on your side needs to keep these updated, Lovelace Kindle Screensaver doesn't report Kindle battery status natively |
 
 The 5-day forecast and 24h rain chart come from `outside.weather`'s forecasts (`weather.get_forecasts`, fetched every ~15 minutes and cached — matching typical weather-integration refresh intervals, so there's no point polling more often). No separate per-day or per-hour sensors are needed.

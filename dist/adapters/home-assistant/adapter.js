@@ -205,12 +205,16 @@ function buildRoomData(hass, room) {
         climate != null &&
         climate.state !== "off";
 
+    const temperature =
+        room.temperature
+            ? getNumericState(hass, room.temperature)
+            : toNumber(climate?.attributes.current_temperature);
+
     return {
 
         name: room.name,
 
-        temperature:
-            toNumber(climate?.attributes.current_temperature),
+        temperature,
 
         climate: {
 
