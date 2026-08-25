@@ -14,15 +14,15 @@ export function getBatteryIcon(level, charging) {
         return `${BASE}battery-empty.svg`;
     }
 
-    if (value >= 75) {
+    if (value >= 67) {
         return `${BASE}battery-full.svg`;
     }
 
-    if (value >= 50) {
+    if (value >= 34) {
         return `${BASE}battery-medium.svg`;
     }
 
-    if (value >= 25) {
+    if (value >= 11) {
         return `${BASE}battery-low.svg`;
     }
 

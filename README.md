@@ -2,7 +2,7 @@
 
 A monochrome, high-contrast Lovelace dashboard built for e-ink displays. Designed to be captured by [Lovelace Kindle Screensaver](https://github.com/joelspurr/lovelace_kindle_screensaver) and pushed to a jailbroken Kindle running OnlineScreensaver, but the card itself works on any Lovelace view.
 
-Shows: outdoor conditions (temperature, min/max, wind, humidity, pressure), a configurable set of AC/climate rooms, a 5-day forecast, a 24h rain chart, and a footer with Kindle battery status and the current date/time.
+Shows: outdoor conditions (temperature, min/max, wind, humidity, pressure), a configurable set of AC/climate rooms, a 5-day forecast, a 24h rain chart (falls back to rain probability % if the weather integration doesn't report expected mm), and a footer with Kindle battery status, the weather source, and the current date/time.
 
 ## Requirements
 

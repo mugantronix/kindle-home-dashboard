@@ -140,7 +140,8 @@ class KindleHomeDashboard extends HTMLElement {
         );
 
         this.footer.update(
-            dashboardData.battery
+            dashboardData.battery,
+            dashboardData.source
         );
 
     }

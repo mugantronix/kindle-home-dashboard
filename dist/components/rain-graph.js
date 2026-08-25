@@ -1,9 +1,11 @@
 import { assetUrl } from "../utils/paths.js";
 
 const HOURS = 24;
-const Y_AXIS_MAX_MM = 4;
-const Y_AXIS_STEP = 1;
+const Y_AXIS_STEPS = 4;
 const LABEL_EVERY = 2;
+
+const MODE_MM = "mm";
+const MODE_PROBABILITY = "probability";
 
 export class RainGraphComponent {
 
@@ -21,7 +23,6 @@ export class RainGraphComponent {
 
         this.titleElement = document.createElement("div");
         this.titleElement.className = "rain-graph-title";
-        this.titleElement.textContent = "Pioggia prossime 24 ore";
 
         this.header.append(this.titleElement);
 
@@ -33,7 +34,8 @@ export class RainGraphComponent {
         this.body.className = "rain-graph-body";
 
         //
-        // Y axis
+        // Y axis (5 fixed positions; the values shown depend on
+        // the mode — mm or probability %)
         //
 
         this.yAxis = document.createElement("div");
@@ -41,11 +43,10 @@ export class RainGraphComponent {
 
         this.yAxisLabels = [];
 
-        for (let value = Y_AXIS_MAX_MM; value >= 0; value -= Y_AXIS_STEP) {
+        for (let i = 0; i <= Y_AXIS_STEPS; i++) {
 
             const label = document.createElement("div");
             label.className = "rain-graph-y-label";
-            label.textContent = String(value);
 
             this.yAxis.appendChild(label);
             this.yAxisLabels.push(label);
@@ -62,7 +63,7 @@ export class RainGraphComponent {
         this.gridLines = document.createElement("div");
         this.gridLines.className = "rain-graph-grid";
 
-        for (let value = Y_AXIS_MAX_MM; value >= 0; value -= Y_AXIS_STEP) {
+        for (let i = 0; i <= Y_AXIS_STEPS; i++) {
 
             const line = document.createElement("div");
             line.className = "rain-graph-grid-line";
@@ -127,7 +128,6 @@ export class RainGraphComponent {
 
         this.sideLabel = document.createElement("div");
         this.sideLabel.className = "rain-graph-side-label";
-        this.sideLabel.textContent = "Totale 24h";
 
         this.totalElement = document.createElement("div");
         this.totalElement.className = "rain-graph-total";
@@ -159,12 +159,23 @@ export class RainGraphComponent {
 
     update(data) {
 
+        const mode =
+            data.mode === MODE_PROBABILITY
+                ? MODE_PROBABILITY
+                : MODE_MM;
+
+        this.updateHeader(mode);
+
+        this.updateYAxis(mode);
+
         this.updateTotal(
-            data.total
+            data.total,
+            mode
         );
 
         this.updateBars(
-            data.hours
+            data.hours,
+            mode
         );
 
         this.updateLabels(
@@ -173,19 +184,56 @@ export class RainGraphComponent {
 
     }
 
-    updateTotal(total) {
+    updateHeader(mode) {
 
-        this.totalElement.textContent =
-            this.formatMm(total);
+        this.titleElement.textContent =
+            mode === MODE_PROBABILITY
+                ? "Probabilità pioggia prossime 24 ore"
+                : "Pioggia prossime 24 ore";
+
+        this.sideLabel.textContent =
+            mode === MODE_PROBABILITY
+                ? "Probabilità 24h"
+                : "Totale 24h";
 
     }
 
-    updateBars(hours) {
+    updateYAxis(mode) {
 
-        const max = Math.max(
-            ...hours.map(h => h.accumulation),
-            Y_AXIS_MAX_MM
-        );
+        const max =
+            mode === MODE_PROBABILITY
+                ? 100
+                : 4;
+
+        this.yAxisLabels.forEach((label, index) => {
+
+            const value =
+                max - (max / Y_AXIS_STEPS) * index;
+
+            label.textContent = String(Math.round(value));
+
+        });
+
+    }
+
+    updateTotal(total, mode) {
+
+        this.totalElement.textContent =
+            mode === MODE_PROBABILITY
+                ? this.formatPercentage(total)
+                : this.formatMm(total);
+
+    }
+
+    updateBars(hours, mode) {
+
+        const max =
+            mode === MODE_PROBABILITY
+                ? 100
+                : Math.max(
+                    ...hours.map(h => h.accumulation),
+                    4
+                );
 
         hours.forEach((hour, index) => {
 
@@ -221,6 +269,12 @@ export class RainGraphComponent {
     formatMm(value) {
 
         return `${value.toFixed(1)} mm`;
+
+    }
+
+    formatPercentage(value) {
+
+        return `${Math.round(value)}%`;
 
     }
 

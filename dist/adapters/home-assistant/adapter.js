@@ -81,7 +81,10 @@ export function getDashboardData(hass, forecasts, config) {
             buildRainGraphData(hourly),
 
         battery:
-            buildBatteryData(hass, config)
+            buildBatteryData(hass, config),
+
+        source:
+            buildSourceLabel(hass, config)
 
     };
 
@@ -276,9 +279,21 @@ function buildForecastData(daily) {
 
 function buildRainGraphData(hourly) {
 
+    const relevantHours =
+        hourly.slice(0, RAIN_HOUR_COUNT);
+
+    const hasPrecipitation =
+        relevantHours.some(
+            entry => entry?.precipitation != null
+        );
+
+    const mode =
+        hasPrecipitation ? "mm" : "probability";
+
     const hours = [];
 
-    let total = 0;
+    let sum = 0;
+    let knownCount = 0;
 
     for (
         let i = 0;
@@ -289,9 +304,14 @@ function buildRainGraphData(hourly) {
         const entry = hourly[i];
 
         const accumulation =
-            toNumber(entry?.precipitation) ?? 0;
+            hasPrecipitation
+                ? toNumber(entry?.precipitation) ?? 0
+                : toNumber(entry?.precipitation_probability) ?? 0;
 
-        total += accumulation;
+        if (entry) {
+            sum += accumulation;
+            knownCount++;
+        }
 
         hours.push({
 
@@ -307,13 +327,31 @@ function buildRainGraphData(hourly) {
 
     }
 
+    const total =
+        mode === "mm"
+            ? sum
+            : knownCount > 0
+                ? sum / knownCount
+                : 0;
+
     return {
+
+        mode,
 
         total,
 
         hours
 
     };
+
+}
+
+function buildSourceLabel(hass, config) {
+
+    const weather =
+        getEntity(hass, config.outside.weather);
+
+    return weather?.attributes.friendly_name ?? null;
 
 }
 

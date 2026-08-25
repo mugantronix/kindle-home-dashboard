@@ -8,7 +8,7 @@ export class FooterComponent {
         this.element.className = "footer";
 
         this.batteryStatusElement = document.createElement("span");
-        this.batteryStatusElement.className = "footer-battery-status hidden";
+        this.batteryStatusElement.className = "footer-battery-status";
 
         this.batteryIcon = document.createElement("img");
         this.batteryIcon.className = "footer-battery-icon";
@@ -20,6 +20,9 @@ export class FooterComponent {
             this.batteryStatusElement,
             this.batteryIcon
         );
+
+        this.sourceElement = document.createElement("span");
+        this.sourceElement.className = "footer-source";
 
         this.dateTimeElement = document.createElement("div");
         this.dateTimeElement.className = "footer-datetime";
@@ -37,6 +40,7 @@ export class FooterComponent {
 
         this.element.append(
             this.batteryGroup,
+            this.sourceElement,
             this.dateTimeElement
         );
 
@@ -50,7 +54,7 @@ export class FooterComponent {
 
     }
 
-    update(battery) {
+    update(battery, source) {
 
         if (!battery) {
 
@@ -68,25 +72,19 @@ export class FooterComponent {
 
             const level = Number(battery.level);
 
-            if (battery.charging) {
-
-                this.batteryStatusElement.classList.remove("hidden");
-
-                this.batteryStatusElement.textContent =
-                    Number.isFinite(level) && level >= 100
-                        ? "Batteria Carica"
-                        : Number.isFinite(level)
-                            ? `${Math.round(level)}%`
-                            : "";
-
-            } else {
-
-                this.batteryStatusElement.classList.add("hidden");
-                this.batteryStatusElement.textContent = "";
-
-            }
+            this.batteryStatusElement.textContent =
+                battery.charging && Number.isFinite(level) && level >= 100
+                    ? "Batteria Carica"
+                    : Number.isFinite(level)
+                        ? `${Math.round(level)}%`
+                        : "";
 
         }
+
+        this.sourceElement.textContent =
+            source
+                ? `Fonte: ${source}`
+                : "";
 
         const now = new Date();
 
