@@ -438,7 +438,7 @@ img {
     flex-direction: column;
     align-items: center;
 
-    padding: 14px 6px;
+    padding: 10px 6px;
 
     border: var(--section-border) solid var(--foreground);
     border-radius: var(--section-radius);
@@ -486,35 +486,45 @@ img {
 
 }
 
-.forecast-day-high {
+.forecast-day-temps {
 
-    font-size: 22px;
-    font-weight: 800;
+    display: flex;
+    align-items: baseline;
 
-    line-height: 1.25;
+    gap: 4px;
+
+    margin-top: 4px;
 
 }
 
-.forecast-day-divider {
+.forecast-day-high {
 
-    width: 32px;
+    font-size: 21px;
+    font-weight: 800;
 
-    height: 1px;
+    line-height: 1;
 
-    margin: 4px 0;
+}
 
-    background: var(--foreground);
+.forecast-day-sep {
+
+    font-size: 16px;
+    font-weight: 500;
+
+    color: #999;
+
+    line-height: 1;
 
 }
 
 .forecast-day-low {
 
-    font-size: 20px;
+    font-size: 19px;
     font-weight: 500;
 
     color: #555;
 
-    line-height: 1.25;
+    line-height: 1;
 
 }
 
@@ -707,9 +717,10 @@ img {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
 
     padding-left: 16px;
+    padding-top: 6px;
 
     border-left: 2px solid #ddd;
 
@@ -826,11 +837,5 @@ img {
 .hidden {
 
     display: none !important;
-
-}
-
-.degree-spacer {
-
-    visibility: hidden;
 
 }

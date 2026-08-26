@@ -25,22 +25,30 @@ export class ForecastComponent {
             const iconElement = document.createElement("img");
             iconElement.className = "forecast-day-icon";
 
-            const highElement = document.createElement("div");
+            const tempsElement = document.createElement("div");
+            tempsElement.className = "forecast-day-temps";
+
+            const highElement = document.createElement("span");
             highElement.className = "forecast-day-high";
 
-            const dividerElement = document.createElement("div");
-            dividerElement.className = "forecast-day-divider";
+            const sepElement = document.createElement("span");
+            sepElement.className = "forecast-day-sep";
+            sepElement.textContent = "/";
 
-            const lowElement = document.createElement("div");
+            const lowElement = document.createElement("span");
             lowElement.className = "forecast-day-low";
+
+            tempsElement.append(
+                highElement,
+                sepElement,
+                lowElement
+            );
 
             day.append(
                 labelElement,
                 dateElement,
                 iconElement,
-                highElement,
-                dividerElement,
-                lowElement
+                tempsElement
             );
 
             this.element.append(day);
@@ -95,41 +103,17 @@ export class ForecastComponent {
             const low =
                 Number(forecast.low);
 
-            elements.highElement.innerHTML = "";
-            elements.highElement.append(
-                this.buildTemperatureNode(high)
-            );
+            elements.highElement.textContent =
+                Number.isFinite(high)
+                    ? `${high.toFixed(0)}°`
+                    : "--°";
 
-            elements.lowElement.innerHTML = "";
-            elements.lowElement.append(
-                this.buildTemperatureNode(low)
-            );
+            elements.lowElement.textContent =
+                Number.isFinite(low)
+                    ? `${low.toFixed(0)}°`
+                    : "--°";
 
         }
-
-    }
-
-    buildTemperatureNode(value) {
-
-        const wrapper = document.createElement("span");
-
-        const spacer = document.createElement("span");
-        spacer.className = "degree-spacer";
-        spacer.setAttribute("aria-hidden", "true");
-        spacer.textContent = "°";
-
-        const digits = document.createElement("span");
-        digits.textContent =
-            Number.isFinite(value)
-                ? value.toFixed(0)
-                : "--";
-
-        const degree = document.createElement("span");
-        degree.textContent = "°";
-
-        wrapper.append(spacer, digits, degree);
-
-        return wrapper;
 
     }
 
