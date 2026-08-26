@@ -348,6 +348,12 @@ function buildRainGraphData(hourly) {
 
 function buildSourceLabel(hass, config) {
 
+    if (config.outside.sourceLabel) {
+
+        return config.outside.sourceLabel;
+
+    }
+
     const weather =
         getEntity(hass, config.outside.weather);
 

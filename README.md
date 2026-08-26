@@ -39,6 +39,7 @@ battery:                                         # optional — omit to hide it 
 |---|---|---|
 | `outside.temperature` | yes | Any sensor with a numeric state |
 | `outside.weather` | yes | Must be a `weather.*` entity supporting both `daily` and `hourly` forecasts (checked via the `weather.get_forecasts` action). Its current-state attributes (`humidity`, `pressure`, `wind_speed`, `wind_bearing`) are also read directly |
+| `outside.sourceLabel` | no | Custom text shown in the footer as "Fonte: ...". If omitted, the entity's own `friendly_name` is used instead |
 | `rooms` | yes | One card per entry. Each `climate` needs `current_temperature`, `temperature`, `fan_mode`, `fan_modes` attributes — any standard HA climate entity works. Optionally, add a `temperature` sensor per room (a separate entity ID, e.g. a dedicated room sensor) to override the climate's own `current_temperature` — useful if you'd rather trust a standalone sensor than the AC unit's reading. The layout is visually tuned for 3 rooms (equal-width columns); other counts will render but may look uneven |
 | `battery` | no | Omit this whole block to hide the battery indicator. `level` is an `input_number` (0-100) and `charging` an `input_boolean` — something on your side needs to keep these updated, Lovelace Kindle Screensaver doesn't report Kindle battery status natively |
 
