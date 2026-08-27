@@ -15,6 +15,13 @@ export class RainGraphComponent {
         this.root.className = "rain-graph";
 
         //
+        // Left column: title + chart, stacked
+        //
+
+        this.main = document.createElement("div");
+        this.main.className = "rain-graph-main";
+
+        //
         // Header
         //
 
@@ -27,7 +34,7 @@ export class RainGraphComponent {
         this.header.append(this.titleElement);
 
         //
-        // Body: chart (left) + side panel (right)
+        // Body: y-axis + chart
         //
 
         this.body = document.createElement("div");
@@ -115,8 +122,20 @@ export class RainGraphComponent {
             this.chartElement
         );
 
+        this.body.append(
+            this.yAxis,
+            this.chartWrapper
+        );
+
+        this.main.append(
+            this.header,
+            this.body
+        );
+
         //
-        // Side panel
+        // Side panel — a direct sibling of `main`, so it spans
+        // the whole card height (title + chart together), not
+        // just the chart's height
         //
 
         this.side = document.createElement("div");
@@ -138,15 +157,9 @@ export class RainGraphComponent {
             this.totalElement
         );
 
-        this.body.append(
-            this.yAxis,
-            this.chartWrapper,
-            this.side
-        );
-
         this.root.append(
-            this.header,
-            this.body
+            this.main,
+            this.side
         );
 
     }
