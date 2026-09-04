@@ -4,6 +4,9 @@ A monochrome, high-contrast Lovelace dashboard built for e-ink displays. Designe
 
 Shows: outdoor conditions (temperature, min/max, wind, humidity, pressure), a configurable set of AC/climate rooms, a 5-day forecast, a 24h rain chart (falls back to rain probability % if the weather integration doesn't report expected mm), and a footer with Kindle battery status, the weather source, and the current date/time.
 
+<img width="623" height="716" alt="khd-photo" src="https://github.com/user-attachments/assets/4d085521-009e-454c-9c6c-07cca682f332" />
+
+
 ## Requirements
 
 This README assumes the Kindle-side setup is already done and working:
